@@ -1,0 +1,14 @@
+core_cm4.h:1939:34:__NVIC_SystemReset	4	static,ignoring_inline_asm
+arm_math.h:4800:29:arm_pid_f32	24	static
+Reflow_functions.c:46:6:reverse	32	static
+Reflow_functions.c:62:5:intToStr	32	static
+Reflow_functions.c:81:6:ftoa	48	static
+Reflow_functions.c:108:6:calculateReflowCurve	72	static
+Reflow_functions.c:198:6:HandleGui	32	static
+Reflow_functions.c:751:6:readTemperatureData	24	static
+Reflow_functions.c:773:6:msTempControlHandler	56	static
+Reflow_functions.c:974:6:updateGuiVal	88	static
+Reflow_functions.c:1188:6:ResetFlags	4	static
+Reflow_functions.c:1205:6:RefloWConditionsUpdate	16	static
+Reflow_functions.c:1272:6:SwitchDebouncing	4	static
+Reflow_functions.c:1382:6:custom_memcpy	48	static
