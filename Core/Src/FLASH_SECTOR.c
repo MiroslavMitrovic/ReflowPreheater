@@ -1,22 +1,30 @@
-/*
- * FLASH_SECTOR.c
- *
- *  Created on: April 07, 2021
- *      Author: Miroslav Mitrović
- */
+/**
+  ******************************************************************************
+  * @file    /src/FLASH_SECTOR.c
+  * @author  Miroslav Mitrovic
+  * @brief   This Source file provides function delcarations for Flash sectors of STM32F407VGT6 .
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2021 Yakamooda electronics GmbH.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by Yakamooda electronics GmbH under GPL
+  *
+  *
+  ******************************************************************************
+  */
+/** @addtogroup Flash_Sector
+  * @{
+  */
 
-
+//TODO Update main page in Doxygen
+/* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "FLASH_SECTOR.h"
 #include "string.h"
 #include "stdio.h"
-#include "main.h"
-#include <stdlib.h>
-#define	 ARM_MATH_CM4
-#include "arm_math.h"
-
-
-
+/* Functions------------------------------------------------------------------*/
 /**
   * @brief  Gets the sector of a given address
   * @param  None
@@ -74,64 +82,19 @@ uint32_t GetSector(uint32_t Address)
   {
     sector = FLASH_SECTOR_11;
   }
-  /*
-  else if((Address < 0x08103FFF) && (Address >= 0x08100000))
-  {
-    sector = FLASH_SECTOR_12;
-  }
-  else if((Address < 0x08107FFF) && (Address >= 0x08104000))
-  {
-    sector = FLASH_SECTOR_13;
-  }
-  else if((Address < 0x0810BFFF) && (Address >= 0x08108000))
-  {
-    sector = FLASH_SECTOR_14;
-  }
-  else if((Address < 0x0810FFFF) && (Address >= 0x0810C000))
-  {
-    sector = FLASH_SECTOR_15;
-  }
-  else if((Address < 0x0811FFFF) && (Address >= 0x08110000))
-  {
-    sector = FLASH_SECTOR_16;
-  }
-  else if((Address < 0x0813FFFF) && (Address >= 0x08120000))
-  {
-    sector = FLASH_SECTOR_17;
-  }
-  else if((Address < 0x0815FFFF) && (Address >= 0x08140000))
-  {
-    sector = FLASH_SECTOR_18;
-  }
-  else if((Address < 0x0817FFFF) && (Address >= 0x08160000))
-  {
-    sector = FLASH_SECTOR_19;
-  }
-  else if((Address < 0x0819FFFF) && (Address >= 0x08180000))
-  {
-    sector = FLASH_SECTOR_20;
-  }
-  else if((Address < 0x081BFFFF) && (Address >= 0x081A0000))
-  {
-    sector = FLASH_SECTOR_21;
-  }
-  else if((Address < 0x081DFFFF) && (Address >= 0x081C0000))
-  {
-    sector = FLASH_SECTOR_22;
-  }
-  else if (Address < 0x081FFFFF) && (Address >= 0x081E0000)
-  {
-    sector = FLASH_SECTOR_23;
-  }*/
+
   return sector;
 }
 
-/**
-  * @brief  Gets sector Size
-  * @param  None
-  * @retval The size of a given sector
-  */
-/*static uint32_t GetSectorSize(uint32_t Sector)
+/** @brief Gets sector Size \n
+ *  This Function returns a sector size.
+ *
+ *
+ *  @param[in] 			Sector
+ *  @param[out] 		none
+ *  @return 			The size of a given sector
+ */
+static uint32_t GetSectorSize(uint32_t Sector)
 {
   uint32_t sectorsize = 0x00;
   if((Sector == FLASH_SECTOR_0) || (Sector == FLASH_SECTOR_1) || (Sector == FLASH_SECTOR_2) ||  (Sector == FLASH_SECTOR_3))
@@ -143,17 +106,6 @@ uint32_t GetSector(uint32_t Address)
     sectorsize = 64 * 1024;
   }
 
-  // Uncomment below, if the device have more than 11 SECTORS
-
-  else if ((Sector == FLASH_SECTOR_12) || (Sector == FLASH_SECTOR_13) || (Sector == FLASH_SECTOR_14) || (Sector == FLASH_SECTOR_15))
-  {
-	sectorsize = 16 * 1024;
-  }
-
-  else if ((Sector == FLASH_SECTOR_16))
-  {
-	sectorsize = 64 * 1024;
-  }
 
   else
   {
@@ -161,70 +113,70 @@ uint32_t GetSector(uint32_t Address)
   }
 
   return sectorsize;
-}*/
+}
 
 
-uint32_t Flash_Write_Data (uint32_t StartSectorAddress, ReflowTemplate *DATA_32)
+uint32_t Flash_Write_Data (uint32_t StartSectorAddress, uint32_t *DATA_32)
 {
 
 	static FLASH_EraseInitTypeDef EraseInitStruct;
 	uint32_t SECTORError;
-	uint32_t *p_Record=(uint32_t* ) DATA_32;
+	uint32_t *p_Record = (uint32_t* ) DATA_32;
 	/* Unlock the Flash to enable the flash control register access *************/
-	  HAL_FLASH_Unlock();
+	HAL_FLASH_Unlock();
 
-	  /* Erase the user Flash area */
+	/* Erase the user Flash area */
 
-	  /* Get the number of sector to erase from 1st sector */
+	/* Get the number of sector to erase from 1st sector */
 
-	  uint32_t StartSector = GetSector(StartSectorAddress);
-	  uint32_t EndSectorAddress = StartSectorAddress + sizeof(ReflowTemplate);
-	  uint32_t EndSector = GetSector(EndSectorAddress);
+	uint32_t StartSector = GetSector(StartSectorAddress);
+	uint32_t EndSectorAddress = StartSectorAddress + sizeof(uint32_t);
+	uint32_t EndSector = GetSector(EndSectorAddress);
 
-	  /* Fill EraseInit structure*/
-	  EraseInitStruct.TypeErase     = FLASH_TYPEERASE_SECTORS;
-	  EraseInitStruct.VoltageRange  = FLASH_VOLTAGE_RANGE_3;
-	  EraseInitStruct.Sector        = StartSector;
-	  EraseInitStruct.NbSectors     = (EndSector - StartSector) + 1;
+	/* Fill EraseInit structure*/
+	EraseInitStruct.TypeErase     = FLASH_TYPEERASE_SECTORS;
+	EraseInitStruct.VoltageRange  = FLASH_VOLTAGE_RANGE_3;
+	EraseInitStruct.Sector        = StartSector;
+	EraseInitStruct.NbSectors     = (EndSector - StartSector) + 1;
 
-	  /* Note: If an erase operation in Flash memory also concerns data in the data or instruction cache,
+	/* Note: If an erase operation in Flash memory also concerns data in the data or instruction cache,
 	     you have to make sure that these data are rewritten before they are accessed during code
 	     execution. If this cannot be done safely, it is recommended to flush the caches by setting the
 	     DCRST and ICRST bits in the FLASH_CR register. */
-	  if (HAL_FLASHEx_Erase(&EraseInitStruct, &SECTORError) != HAL_OK)
-	  {
-		  return HAL_FLASH_GetError ();
-	  }
+	if (HAL_FLASHEx_Erase(&EraseInitStruct, &SECTORError) != HAL_OK)
+	{
+		return HAL_FLASH_GetError ();
+	}
 
 
-	  /* Program the user Flash area word by word
+	/* Program the user Flash area word by word
 	    (area defined by FLASH_USER_START_ADDR and FLASH_USER_END_ADDR) ***********/
-	   for(int i=0;i<sizeof(ReflowTemplate);i=i+4,StartSectorAddress=StartSectorAddress+4, p_Record++)
-	   {
-	     if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, StartSectorAddress, *p_Record) == HAL_OK)
-	     {
+	for(int i = 0; i < sizeof(uint32_t) ; i = i + 4 , StartSectorAddress = StartSectorAddress + 4, p_Record++)
+	{
+		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, StartSectorAddress, *p_Record) == HAL_OK)
+		{
 
-	    	 //Do nothing
-	     }
-	     else
-	     {
-	       /* Error occurred while writing data in Flash memory*/
-	    	 return HAL_FLASH_GetError ();
-	     }
-	   }
+			//Do nothing
+		}
+		else
+		{
+			/* Error occurred while writing data in Flash memory*/
+			return HAL_FLASH_GetError ();
+		}
+	}
 
-	  /* Lock the Flash to disable the flash control register access (recommended
+	/* Lock the Flash to disable the flash control register access (recommended
 	     to protect the FLASH memory against possible unwanted operation) *********/
-	  HAL_FLASH_Lock();
+	HAL_FLASH_Lock();
 
-	   return 0;
+	return 0;
 }
-
-void Flash_Read_Data (uint32_t StartSectorAddress, __IO ReflowTemplate *DATA_32)
+//TODO Write the reflow data into ROM, then read from it. Define RO sections and write the data there.
+void Flash_Read_Data (uint32_t StartSectorAddress, __IO uint32_t *DATA_32)
 {
-	uint32_t *p_Data=(uint32_t* ) DATA_32;
+	uint32_t *p_Data = (uint32_t* ) DATA_32;
 
-	for(int i=0; i<sizeof(ReflowTemplate);	i=i+4,	p_Data++,	StartSectorAddress=StartSectorAddress+4	)
+	for(int i = 0; i < sizeof(uint32_t) ;	i = i + 4,	p_Data++ ,	StartSectorAddress = StartSectorAddress + 4	)
 	{
 
 		*p_Data = *(__IO uint32_t*)StartSectorAddress;
@@ -234,10 +186,10 @@ void Flash_Read_Data (uint32_t StartSectorAddress, __IO ReflowTemplate *DATA_32)
 
 void Convert_To_Str (uint32_t *data, char *str)
 {
-	int numberofbytes = ((strlen(data)/4) + ((strlen(data) % 4) != 0)) *4;
+	int numberofbytes = ((strlen((const char*)data) / 4) + ((strlen((const char*)data) % 4) != 0)) *4;
 
 	for (int i=0; i<numberofbytes; i++)
 	{
-		str[i] = data[i/4]>>(8*(i%4));
+		str[i] = data[i/4] >> (8 * ( i % 4 ));
 	}
 }

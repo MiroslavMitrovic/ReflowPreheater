@@ -1,17 +1,39 @@
+/**
+  ******************************************************************************
+  * @file    /src/i2c-lcd.c
+  * @author  Miroslav Mitrovic
+  * @brief   This file contains all the functions definitions for the i2c LCD functions.
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2021 Yakamooda electronics GmbH.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by Yakamooda electronics GmbH under GPL
+  *
+  *
+ ******************************************************************************
+  */
+/** @addtogroup I2C LCD
+  * @{
+  */
 
-/** Put this in the src folder **/
 
-#include "i2c-lcd.h"
-extern I2C_HandleTypeDef hi2c1;  // change your handler here accordingly
+/* Includes ------------------------------------------------------------------*/
+#include <i2c_lcd.h>
+#include "main.h"
+extern I2C_HandleTypeDef hi2c1;  	///< Global I2C hanlde-change your handler here accordingly
 
-#define  SLAVE_ADDRESS_LCD 0x4EU // change this according to ur setup
+/* Defines ------------------------------------------------------------------*/
+#define  SLAVE_ADDRESS_LCD 0x4EU 	///< I2C LCD address-change according to your I2C address
 
+/* Functions ------------------------------------------------------------------*/
 void lcd_send_cmd (char cmd)
 {
   char data_u, data_l;
 	uint8_t data_t[4];
-	data_u = (cmd&0xf0);
-	data_l = ((cmd<<4)&0xf0);
+	data_u = (cmd & 0xf0);
+	data_l = ( (cmd << 4) & 0xf0);
 	data_t[0] = data_u|0x0C;  //en=1, rs=0
 	data_t[1] = data_u|0x08;  //en=0, rs=0
 	data_t[2] = data_l|0x0C;  //en=1, rs=0
@@ -66,47 +88,35 @@ void lcd_put_cur(int row, int col)
 
 void lcd_init_2 (void)
 {
-uint8_t i=0;
-HAL_Delay(20);
-for(i=0;i<3;i++)//sending 3 times: select 4-bit mode
-{
-lcd_send_cmd(0x03);
-HAL_Delay(10);
-}
-//4
-lcd_send_cmd (0x02); //to set to 4-bit mode
-//5
-HAL_Delay(10);
-lcd_send_cmd (0x20);
-lcd_send_cmd (0x28); // Function set --> DL=0 (4 bit mode), N = 1 (2 line display) F = 0 (5x8 characters)
-//6
-HAL_Delay(10);
-lcd_send_cmd (0x00);
-lcd_send_cmd (0x80);
-//7
-HAL_Delay(10);
-lcd_send_cmd (0x00);
-lcd_send_cmd(0x10);
-//8
-HAL_Delay(10);
-lcd_send_cmd (0x00);
-lcd_send_cmd(0x40);
-HAL_Delay(10);
-lcd_send_cmd (0x00);
-lcd_send_cmd (LCD_TURN_ON);
-HAL_Delay(10);
-//
-//lcd_send_cmd (0x20); //to set to 4-bit mode
-//lcd_send_cmd (0x28); // Function set --> DL=0 (4 bit mode), N = 1 (2 line display) F = 0 (5x8 characters)
-//HAL_Delay(100);
-//lcd_send_cmd (LCD_TURN_OFF);
-//HAL_Delay(100);
-//lcd_send_cmd (LCD_CLEAR);
-//HAL_Delay(100);
-//lcd_send_cmd (LCD_ENTRY_MODE_SET);
-//HAL_Delay(100);
-//lcd_send_cmd (LCD_TURN_ON);
-
+	uint8_t i=0;
+	HAL_Delay(20);
+	for(i=0;i<3;i++)//sending 3 times: select 4-bit mode
+	{
+		lcd_send_cmd(0x03);
+		HAL_Delay(10);
+	}
+	//4
+	lcd_send_cmd (0x02); //to set to 4-bit mode
+	//5
+	HAL_Delay(10);
+	lcd_send_cmd (0x20);
+	lcd_send_cmd (0x28); // Function set --> DL=0 (4 bit mode), N = 1 (2 line display) F = 0 (5x8 characters)
+	//6
+	HAL_Delay(10);
+	lcd_send_cmd (0x00);
+	lcd_send_cmd (0x80);
+	//7
+	HAL_Delay(10);
+	lcd_send_cmd (0x00);
+	lcd_send_cmd(0x10);
+	//8
+	HAL_Delay(10);
+	lcd_send_cmd (0x00);
+	lcd_send_cmd(0x40);
+	HAL_Delay(10);
+	lcd_send_cmd (0x00);
+	lcd_send_cmd (LCD_TURN_ON);
+	HAL_Delay(10);
 }
 
 

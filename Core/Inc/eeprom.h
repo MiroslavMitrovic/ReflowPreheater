@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
   * @file    EEPROM/EEPROM_Emulation/inc/eeprom.h 
-  * @author  MCD Application Team
+  * @author  MCD Application Team/Miroslav Mitrovic
   * @brief   This file contains all the functions prototypes for the EEPROM 
   *          emulation firmware library.
   ******************************************************************************
@@ -17,15 +17,17 @@
   *
   ******************************************************************************
   */ 
-
+/*/*
+   \page CMSIS EEPROM EMULATION
+   *
+*/
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __EEPROM_H
 #define __EEPROM_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_hal.h"
-#include "Reflow_functions.h"
-#include "FLASH_SECTOR.h"
+#include "main.h"
+#include "variables.h"
 
 /* Exported constants --------------------------------------------------------*/
 /* EEPROM emulation firmware error codes */
@@ -80,15 +82,91 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
+/* Virtual address defined by the user: 0xFFFF value is prohibited */
+typedef enum FEE_Vars
+{
+	KP_VirtAddr = 0xAAA0,
+	firstHeatUpRate_VirtAddr = 0xAAA1,
+	SoakTempeture_VirtAddr = 0xAAA2,
+	SoakTime_VirtAddr = 0xAAA3,
+	secondHeatUpRate_VirtAddr = 0xAAA4,
+	ReflowTempeture_VirtAddr = 0xAAA5,
+	ReflowTime_VirtAddr = 0xAAA6,
+	ui8_bank1Percentage_VirtAddr = 0xAAA7,
+	ui8_bank2Percentage_VirtAddr = 0xAAA8,
+	MaxNumOfVirtAddr = 10
+}FEE_VirtAddr;
+
+
+/** @brief Initialization Function of EEPROM Emulation \n
+ *  This Function Restore the pages to a known good state in case of page's status
+ *   corruption after a power loss.
+ *
+ *  @param[in] 	none
+ *  @param[out] none
+ *  @return - Flash error code: on write Flash error
+ *         - FLASH_COMPLETE: on success
+ */
 uint16_t EE_Init(void);
+/** @brief  Function that Reads EEPROM Emulation Variable \n
+ *  This Function Returns the last stored variable data, if found, which correspond to
+ *   the passed virtual address
+ *
+ *  @param[in] 	VirtAddress Variable virtual address
+ *  @param[out] Data Global variable contains the read variable value
+ *  @return Success or error status:
+ *           - 0: if variable was found
+ *           - 1: if the variable was not found
+ *           - NO_VALID_PAGE: if no valid page was found.
+ */
 uint16_t EE_ReadVariable(uint16_t VirtAddress, uint16_t* Data);
+/** @brief  Function that writes EEPROM Emulation Variable \n
+ *  This Function writes the last stored variable data with the passed virtual address
+ *
+ *  @param[in] 	VirtAddress Variable virtual address
+ *  @param[in] 	Data: 16 bit data to be written
+ *  @return Success or error status:
+ *           - FLASH_COMPLETE: on success
+ *           - PAGE_FULL: if valid page is full
+ *           - NO_VALID_PAGE: if no valid page was found
+ *           - Flash error code: on write Flash error
+ */
 uint16_t EE_WriteVariable(uint16_t VirtAddress, uint16_t Data);
+/** @brief Initialization Function of Flash EEPROM Emulation \n
+ *  This Function Restore the pages to a known good state in case of page's status
+ *   corruption after a power loss.
+ *
+ *  @param[in] 	none
+ *  @param[out] none
+ */
 void FEE_Init(void);
+/** @brief Deinitialization Function of Flash EEPROM Emulation \n
+ *  This Function Locks a Flash driver.
+ *
+ *  @param[in] 	none
+ *  @param[out] none
+ */
 void FEE_DeInit(void);
-
-HAL_StatusTypeDef FEE_WriteCtrlParams(msTempControlParams* CtrlParams, ReflowTemplate *p_ReflowParameters);
-
-HAL_StatusTypeDef FEE_ReadCtrlParams(msTempControlParams* CtrlParams, ReflowTemplate *p_ReflowParameters);
+/** @brief  Function that writes EEPROM Emulation Variable \n
+ *  This Function writes the last stored variable data with the passed virtual address
+ *
+ *  @param[in] 	p_CtrlParams pointer to struct with Control Parameters
+ *  @param[in] 	p_ReflowParameters pointer to struct with Reflow Parameters
+ *  @return Success or error status:
+ *           - HAL_OK
+ *           - HAL_ERROR
+ */
+HAL_StatusTypeDef FEE_WriteCtrlParams(msTempControlParams* p_CtrlParams, ReflowTemplate *p_ReflowParameters);
+/** @brief  Function that reads EEPROM Emulation Variable \n
+ *  This Function reads the last stored variable data with the passed virtual address
+ *
+ *  @param[out] 	p_CtrlParams pointer to struct with Control Parameters
+ *  @param[out] 	p_ReflowParameters pointer to struct with Reflow Parameters
+ *  @return Success or error status:
+ *           - HAL_OK
+ *           - HAL_ERROR
+ */
+HAL_StatusTypeDef FEE_ReadCtrlParams(msTempControlParams* p_CtrlParams, ReflowTemplate *p_ReflowParameters);
 #endif /* __EEPROM_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

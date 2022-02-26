@@ -29,9 +29,7 @@ Core/Src/FLASH_SECTOR.o: ../Core/Src/FLASH_SECTOR.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
- ../Core/Inc/FLASH_SECTOR.h ../Core/Inc/arm_math.h \
- ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h \
- ../Core/Inc/main.h ../Core/Inc/arm_math.h
+ ../Core/Inc/FLASH_SECTOR.h
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 
@@ -94,11 +92,3 @@ Core/Src/FLASH_SECTOR.o: ../Core/Src/FLASH_SECTOR.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 
 ../Core/Inc/FLASH_SECTOR.h:
-
-../Core/Inc/arm_math.h:
-
-../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h:
-
-../Core/Inc/main.h:
-
-../Core/Inc/arm_math.h:

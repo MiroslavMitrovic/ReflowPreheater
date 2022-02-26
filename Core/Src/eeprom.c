@@ -42,17 +42,6 @@ static uint16_t EE_VerifyPageFullWriteVariable(uint16_t VirtAddress, uint16_t Da
 static uint16_t EE_PageTransfer(uint16_t VirtAddress, uint16_t Data);
 static uint16_t EE_VerifyPageFullyErased(uint32_t Address);
 
-/**
-  * @brief  Restore the pages to a known good state in case of page's status
-  *   corruption after a power loss.
-  * @param  None.
-  * @retval - Flash error code: on write Flash error
-  *         - FLASH_COMPLETE: on success
-  */
-
-
-
-
 
 uint16_t EE_Init(void)
 {
@@ -237,21 +226,21 @@ uint16_t EE_Init(void)
       else /* Page0 valid, Page1 receive */
       {
         /* Transfer data from Page0 to Page1 */
-        for (VarIdx = 0; VarIdx < NB_OF_VAR; VarIdx++)
+        for (VarIdx = 0; VarIdx < MaxNumOfVirtAddr; VarIdx++)
         {
-          if ((*(__IO uint16_t*)(PAGE1_BASE_ADDRESS + 6)) == VirtAddVarTab[VarIdx])
+          if ((*(__IO uint16_t*)(PAGE1_BASE_ADDRESS + 6)) == (KP_VirtAddr+VarIdx) )
           {
             x = VarIdx;
           }
           if (VarIdx != x)
           {
             /* Read the last variables' updates */
-            ReadStatus = EE_ReadVariable(VirtAddVarTab[VarIdx], &DataVar);
+            ReadStatus = EE_ReadVariable( (KP_VirtAddr+VarIdx), &DataVar);
             /* In case variable corresponding to the virtual address was found */
             if (ReadStatus != 0x1)
             {
               /* Transfer the variable to the Page1 */
-              EepromStatus = EE_VerifyPageFullWriteVariable(VirtAddVarTab[VarIdx], DataVar);
+              EepromStatus = EE_VerifyPageFullWriteVariable( (KP_VirtAddr+VarIdx), DataVar);
               /* If program operation was failed, a Flash error code is returned */
               if (EepromStatus != HAL_OK)
               {
@@ -335,16 +324,7 @@ uint16_t EE_VerifyPageFullyErased(uint32_t Address)
   return ReadStatus;
 }
 
-/**
-  * @brief  Returns the last stored variable data, if found, which correspond to
-  *   the passed virtual address
-  * @param  VirtAddress: Variable virtual address
-  * @param  Data: Global variable contains the read variable value
-  * @retval Success or error status:
-  *           - 0: if variable was found
-  *           - 1: if the variable was not found
-  *           - NO_VALID_PAGE: if no valid page was found.
-  */
+
 uint16_t EE_ReadVariable(uint16_t VirtAddress, uint16_t* Data)
 {
   uint16_t ValidPage = PAGE0;
@@ -394,20 +374,11 @@ uint16_t EE_ReadVariable(uint16_t VirtAddress, uint16_t* Data)
   return ReadStatus;
 }
 
-/**
-  * @brief  Writes/upadtes variable data in EEPROM.
-  * @param  VirtAddress: Variable virtual address
-  * @param  Data: 16 bit data to be written
-  * @retval Success or error status:
-  *           - FLASH_COMPLETE: on success
-  *           - PAGE_FULL: if valid page is full
-  *           - NO_VALID_PAGE: if no valid page was found
-  *           - Flash error code: on write Flash error
-  */
+
 uint16_t EE_WriteVariable(uint16_t VirtAddress, uint16_t Data)
 {
   uint16_t Status = 0;
-  uint16_t PageTransferStatus=0;
+
   /* Write the variable virtual address and value in the EEPROM */
   Status = EE_VerifyPageFullWriteVariable(VirtAddress, Data);
 
@@ -605,8 +576,8 @@ static uint16_t EE_VerifyPageFullWriteVariable(uint16_t VirtAddress, uint16_t Da
 /**
   * @brief  Transfers last updated variables data from the full Page to
   *   an empty one.
-  * @param  VirtAddress: 16 bit virtual address of the variable
-  * @param  Data: 16 bit data to be written as variable value
+  * @param[in]  VirtAddress: 16 bit virtual address of the variable
+  * @param[in]  Data: 16 bit data to be written as variable value
   * @retval Success or error status:
   *           - FLASH_COMPLETE: on success
   *           - PAGE_FULL: if valid page is full
@@ -709,14 +680,13 @@ static uint16_t EE_PageTransfer(uint16_t VirtAddress, uint16_t Data)
   return FlashStatus;
 }
 
-//FEEInit Function
+
 
 void FEE_Init(void)
 {
  HAL_FLASH_Unlock();
  HAL_Delay(100);
  EE_Init();
-
 }
 
 void FEE_DeInit(void)
@@ -725,98 +695,98 @@ void FEE_DeInit(void)
 }
 
 
-HAL_StatusTypeDef FEE_WriteCtrlParams(msTempControlParams* CtrlParams, ReflowTemplate *p_ReflowParameters)
+HAL_StatusTypeDef FEE_WriteCtrlParams(msTempControlParams* p_CtrlParams, ReflowTemplate *p_ReflowParameters)
 {
 
-	HAL_StatusTypeDef result=HAL_OK;
-	uint8_t ui8_bank1Percentage=CtrlParams->ui8_bank1Percentage;
-	uint8_t ui8_bank2Percentage=CtrlParams->ui8_bank2Percentage;
-	uint16_t u16_KP=(uint16_t)p_ReflowParameters->KP;
-	uint16_t u16_firstHeatUpRate=(uint16_t)(p_ReflowParameters->firstHeatUpRate * 100.0);
-	uint16_t u16_secondHeatUpRate=(uint16_t)(p_ReflowParameters->secondHeatUpRate * 100.0);
-	uint16_t u16_SoakTime= (uint16_t)p_ReflowParameters->SoakTime;
-	uint16_t u16_SoakTemperature= (uint16_t)p_ReflowParameters->SoakTempeture;
-	uint16_t u16_ReflowTime= (uint16_t)p_ReflowParameters->ReflowTime;
-	uint16_t u16_ReflowTemperature= (uint16_t)p_ReflowParameters->ReflowTempeture;
+	HAL_StatusTypeDef result = HAL_OK;
+	uint8_t ui8_bank1Percentage = p_CtrlParams->ui8_bank1Percentage;
+	uint8_t ui8_bank2Percentage = p_CtrlParams->ui8_bank2Percentage;
+	uint16_t u16_KP = (uint16_t)p_ReflowParameters->KP;
+	uint16_t u16_firstHeatUpRate = (uint16_t)(p_ReflowParameters->firstHeatUpRate * 100.0);
+	uint16_t u16_secondHeatUpRate = (uint16_t)(p_ReflowParameters->secondHeatUpRate * 100.0);
+	uint16_t u16_SoakTime = (uint16_t)p_ReflowParameters->SoakTime;
+	uint16_t u16_SoakTemperature = (uint16_t)p_ReflowParameters->SoakTempeture;
+	uint16_t u16_ReflowTime = (uint16_t)p_ReflowParameters->ReflowTime;
+	uint16_t u16_ReflowTemperature = (uint16_t)p_ReflowParameters->ReflowTempeture;
 
 
 	if((EE_WriteVariable(ui8_bank1Percentage_VirtAddr,(uint16_t)ui8_bank1Percentage)) != HAL_OK)
 	{
-		result=HAL_ERROR;
+		result = HAL_ERROR;
 		Error_Handler();
 	}
 
 	if((EE_WriteVariable(ui8_bank2Percentage_VirtAddr,  (uint16_t)ui8_bank2Percentage)) != HAL_OK)
 	{
-		result=HAL_ERROR;
+		result = HAL_ERROR;
 		Error_Handler();
 	}
 
 	if((EE_WriteVariable(KP_VirtAddr,  u16_KP)) != HAL_OK)
 	{
-		result=HAL_ERROR;
+		result = HAL_ERROR;
 		Error_Handler();
 	}
 
 	if((EE_WriteVariable(firstHeatUpRate_VirtAddr,  (uint16_t)u16_firstHeatUpRate)) != HAL_OK)
 	{
-		result=HAL_ERROR;
+		result = HAL_ERROR;
 		Error_Handler();
 	}
 
 	if((EE_WriteVariable(secondHeatUpRate_VirtAddr, (uint16_t) u16_secondHeatUpRate)) != HAL_OK)
 	{
-		result=HAL_ERROR;
+		result = HAL_ERROR;
 		Error_Handler();
 	}
 
 	if((EE_WriteVariable(SoakTime_VirtAddr, (uint16_t) u16_SoakTime)) != HAL_OK)
 	{
-		result=HAL_ERROR;
+		result = HAL_ERROR;
 		Error_Handler();
 	}
 
 	if((EE_WriteVariable(SoakTempeture_VirtAddr, (uint16_t) u16_SoakTemperature)) != HAL_OK)
 	{
-		result=HAL_ERROR;
+		result = HAL_ERROR;
 		Error_Handler();
 	}
 	if((EE_WriteVariable(ReflowTime_VirtAddr, (uint16_t) u16_ReflowTime)) != HAL_OK)
 	{
-		result=HAL_ERROR;
+		result = HAL_ERROR;
 		Error_Handler();
 	}
 
 	if((EE_WriteVariable(ReflowTempeture_VirtAddr, (uint16_t) u16_ReflowTemperature)) != HAL_OK)
 	{
-		result=HAL_ERROR;
+		result = HAL_ERROR;
 		Error_Handler();
 	}
 
 	return result;
-
 }
 
-HAL_StatusTypeDef FEE_ReadCtrlParams(msTempControlParams* CtrlParams, ReflowTemplate *p_ReflowParameters)
+HAL_StatusTypeDef FEE_ReadCtrlParams(msTempControlParams* p_CtrlParams, ReflowTemplate *p_ReflowParameters)
 {
 
 	HAL_StatusTypeDef result = HAL_OK;
-	uint16_t *p_bank1Percentage = (uint16_t*)&CtrlParams->ui8_bank1Percentage;
-	uint16_t *p_bank2Percentage = (uint16_t*)&CtrlParams->ui8_bank2Percentage;
-	uint16_t *p_KP = (uint16_t*)&p_ReflowParameters->KP;
-	uint16_t *p_firstHeatUpRate = (uint16_t*)&p_ReflowParameters->firstHeatUpRate;
-	uint16_t *p_secondHeatUpRate = (uint16_t*)&p_ReflowParameters->secondHeatUpRate;
-	uint16_t *p_SoakTime = (uint16_t*)&p_ReflowParameters->SoakTime;
-	uint16_t *p_SoakTemperature =(uint16_t*)&p_ReflowParameters->SoakTempeture ;
-	uint16_t *p_ReflowTime =(uint16_t*)&p_ReflowParameters->ReflowTime;
-	uint16_t *p_ReflowTemperature =(uint16_t*)&p_ReflowParameters->ReflowTempeture ;
+	uint16_t *p_bank1Percentage =	(uint16_t*)&p_CtrlParams->ui8_bank1Percentage;
+	uint16_t *p_bank2Percentage =	(uint16_t*)&p_CtrlParams->ui8_bank2Percentage;
+	uint16_t *p_KP = 				(uint16_t*)&p_ReflowParameters->KP;
+	uint16_t *p_firstHeatUpRate =	(uint16_t*)&p_ReflowParameters->firstHeatUpRate;
+	uint16_t *p_secondHeatUpRate =	(uint16_t*)&p_ReflowParameters->secondHeatUpRate;
+	uint16_t *p_SoakTime = 			(uint16_t*)&p_ReflowParameters->SoakTime;
+	uint16_t *p_SoakTemperature = 	(uint16_t*)&p_ReflowParameters->SoakTempeture ;
+	uint16_t *p_ReflowTime = 		(uint16_t*)&p_ReflowParameters->ReflowTime;
+	uint16_t *p_ReflowTemperature = (uint16_t*)&p_ReflowParameters->ReflowTempeture ;
 
 
 	/*NULL PTR Check*/
-	if( (NULL==p_bank1Percentage) || (NULL==p_bank2Percentage) || (NULL==p_KP) || (NULL==p_firstHeatUpRate) || (NULL==p_secondHeatUpRate) ||
-			 (NULL==p_SoakTime) ||  (NULL==p_SoakTemperature) || (NULL==p_ReflowTime) || (NULL==p_ReflowTemperature) )
+	if( (NULL == p_bank1Percentage) || (NULL == p_bank2Percentage) || (NULL == p_KP) || (NULL == p_firstHeatUpRate) || (NULL == p_secondHeatUpRate) ||
+			 (NULL == p_SoakTime) ||  (NULL == p_SoakTemperature) || (NULL == p_ReflowTime) || (NULL == p_ReflowTemperature) )
 	{
-		while(1);
+		result = HAL_ERROR;
+		//Error_Handler();
 	}
 	else
 	{
@@ -824,83 +794,74 @@ HAL_StatusTypeDef FEE_ReadCtrlParams(msTempControlParams* CtrlParams, ReflowTemp
 	}
 
 
-
-
 	 if((EE_ReadVariable(ui8_bank1Percentage_VirtAddr, p_bank1Percentage)) != HAL_OK)
 	{
-		result=HAL_ERROR;
+		result = HAL_ERROR;
+		//Error_Handler();
 
 	}
 
 	if((EE_ReadVariable(ui8_bank2Percentage_VirtAddr, p_bank2Percentage)) != HAL_OK)
 	{
-		result=HAL_ERROR;
-
+		result = HAL_ERROR;
+		//Error_Handler();
 	}
 
 	if((EE_ReadVariable(KP_VirtAddr,  p_KP)) != HAL_OK)
 	{
-		result=HAL_ERROR;
-
+		result = HAL_ERROR;
+		//Error_Handler();
 	}
 
 	if((EE_ReadVariable(firstHeatUpRate_VirtAddr,  p_firstHeatUpRate)) != HAL_OK)
 	{
-		result=HAL_ERROR;
-
+		result = HAL_ERROR;
+		//Error_Handler();
 	}
 
 	if((EE_ReadVariable(secondHeatUpRate_VirtAddr,  p_secondHeatUpRate)) != HAL_OK)
 	{
-		result=HAL_ERROR;
-
+		result = HAL_ERROR;
+		//Error_Handler();
 	}
 
 	if((EE_ReadVariable(SoakTime_VirtAddr,  p_SoakTime)) != HAL_OK)
 	{
-		result=HAL_ERROR;
-
+		result = HAL_ERROR;
+		//Error_Handler();
 	}
 
 	if((EE_ReadVariable(SoakTempeture_VirtAddr,  p_SoakTemperature)) != HAL_OK)
 	{
-		result=HAL_ERROR;
-
+		result = HAL_ERROR;
+		//Error_Handler();
 	}
 	if((EE_ReadVariable(ReflowTime_VirtAddr, p_ReflowTime )) != HAL_OK)
 	{
-		result=HAL_ERROR;
-
+		result = HAL_ERROR;
+		//Error_Handler();
 	}
 
 	if((EE_ReadVariable(ReflowTempeture_VirtAddr, p_ReflowTemperature)) != HAL_OK)
 	{
-		result=HAL_ERROR;
-
+		result = HAL_ERROR;
+		//Error_Handler();
 	}
 
-
-
-
-
-
-	if(HAL_OK==result)
+	if(HAL_OK == result)
 	{
-		CtrlParams->ui8_bank1Percentage = (uint8_t)*p_bank1Percentage;
-		CtrlParams->ui8_bank2Percentage = (uint8_t)*p_bank2Percentage;
-		p_ReflowParameters->KP = (float32_t)*p_KP;
-		p_ReflowParameters->firstHeatUpRate = (float32_t) ( (*p_firstHeatUpRate)/100.0);
-		p_ReflowParameters->secondHeatUpRate= (float32_t) ( (*p_secondHeatUpRate)/100.0);
-		p_ReflowParameters->SoakTime = (uint32_t)*p_SoakTime;
-		p_ReflowParameters->SoakTempeture = (uint32_t)*p_SoakTemperature;
-		p_ReflowParameters->ReflowTime = (uint32_t)*p_ReflowTime;
-		p_ReflowParameters->ReflowTempeture = (uint32_t)*p_ReflowTemperature;
+		p_CtrlParams->ui8_bank1Percentage = 		(uint8_t)*p_bank1Percentage;
+		p_CtrlParams->ui8_bank2Percentage = 		(uint8_t)*p_bank2Percentage;
+		p_ReflowParameters->KP = 				(float32_t)*p_KP;
+		p_ReflowParameters->firstHeatUpRate = 	(float32_t) ( (*p_firstHeatUpRate) / 100.0);
+		p_ReflowParameters->secondHeatUpRate =	(float32_t) ( (*p_secondHeatUpRate) / 100.0);
+		p_ReflowParameters->SoakTime = 			(uint32_t)*p_SoakTime;
+		p_ReflowParameters->SoakTempeture = 	(uint32_t)*p_SoakTemperature;
+		p_ReflowParameters->ReflowTime = 		(uint32_t)*p_ReflowTime;
+		p_ReflowParameters->ReflowTempeture = 	(uint32_t)*p_ReflowTemperature;
 	}
-
 
 	return result;
-
-
 }
 
 

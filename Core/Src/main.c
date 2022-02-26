@@ -23,11 +23,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "i2c-lcd.h"
-#include "arm_math.h"
-#include "FLASH_SECTOR.h"
-#include "Reflow_functions.h"
-#include "variables.h"
 #include "eeprom.h"
 /* USER CODE END Includes */
 
@@ -74,25 +69,16 @@ static void MX_TIM3_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-int row=0;
-int col=0;
-int address=0;
 
-/* Virtual address defined by the user: 0xFFFF value is prohibited */
-uint16_t VirtAddVarTab[NB_OF_VAR] = {0x5555, 0x6666, 0x7777};
-uint16_t VarDataTab[NB_OF_VAR] = {0, 0, 0};
-uint16_t VarValue,VarDataTmp = 0;
-bool b_dataEnter = false;
-uint32_t u32_EEPromErrCnt=0;
-uint16_t u16_TestVal=523;
+uint32_t u32_EEPromErrCnt = 0; //EEPROM error counter, if EEPROM init fails, it will increment
 ReflowTemplate ReflowParameters;
-uint16_t ReflowCurve_main[15000]={0};
-uint16_t PhaseIndex_main[6]={0};
-
+uint16_t PhaseIndex_main[6] = {0};
 ReflowTemplate *p_ReflowParameters;
 uint16_t *p_ReflowCurve;
 uint16_t *p_PhaseIndex;
 msTempControlParams CtrlParams;
+FLAGS StateFlag;
+
 /* USER CODE END 0 */
 
 /**
@@ -129,32 +115,34 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-  ReflowParameters.KD=0;
-  ReflowParameters.KP=200;
-  ReflowParameters.Ki=0;
-  ReflowParameters.ReflowTempeture=250;
-  ReflowParameters.ReflowTime=100;
-  ReflowParameters.SoakTempeture=100;
-  ReflowParameters.SoakTime=100;
-  ReflowParameters.firstHeatUpRate=2;
-  ReflowParameters.secondHeatUpRate=2;
+  //TODO add Ki and KD as parameters for entering, and add them in FEE.
+  ReflowParameters.KD = 0.3;
+  ReflowParameters.KP = 200; //125
+  ReflowParameters.Ki = 1.1;
+  ReflowParameters.ReflowTempeture = 250;
+  ReflowParameters.ReflowTime = 100;
+  ReflowParameters.SoakTempeture = 100;
+  ReflowParameters.SoakTime = 100;
+  ReflowParameters.firstHeatUpRate = 2;
+  ReflowParameters.secondHeatUpRate = 2;
   PID.Kp = ReflowParameters.KP;
   PID.Ki = ReflowParameters.Ki;
   PID.Kd = ReflowParameters.KD;
-  for(int i=0;i<5;i++)
+  for(int i = 0;i < 5; i++)
 {
-	PhaseIndex_main[i]=0;
+	PhaseIndex_main[i] = 0;
 }
 
-  p_ReflowParameters=&ReflowParameters;
-  p_ReflowCurve=ReflowCurve_main;
-  p_PhaseIndex=PhaseIndex_main;
+  uint16_t u_ReflowCurve_main[REFLOW_CURVE_SIZE] = {0};
+  p_ReflowParameters = &ReflowParameters;
+  p_ReflowCurve = u_ReflowCurve_main;
+  p_PhaseIndex = PhaseIndex_main;
 
 
 
  // address=find_I2C_deviceAddress();
  // HAL_Delay(2000);
-
+  ResetFlags();
   HAL_Delay(500);
   lcd_init();
   HAL_Delay(20);
@@ -173,17 +161,14 @@ int main(void)
   /*GUI for data entry*/
   HandleGui();
 
-  if(false == b_dataEnter)
+  if(FALSE ==  StateFlag.StartFlag)
   {
-	  b_dataEnter = true;
 	  calculateReflowCurve(p_ReflowParameters, p_ReflowCurve, p_PhaseIndex);
 	  arm_pid_init_f32(&PID, 1);
-	  /*set Reflow Enable Flag */
-	  ReflowEnable = 1;
+	  /*set Reflow Start Flag */
 
-
+	  StateFlag.StartFlag = TRUE;
   }
-
 
   /* USER CODE END 2 */
 
@@ -194,36 +179,30 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
 	  if(250 <= CtrlParams.counter_250ms)
 	  {
-		  CtrlParams.counter_250ms=0;
+		  CtrlParams.counter_250ms = 0;
+		  msTempControlHandler(&CtrlParams, p_ReflowCurve, p_ReflowParameters);
+	  }
+	  if(500 <= CtrlParams.counter_500ms)
+	  {
+		  CtrlParams.counter_500ms = 0;
 		  CtrlParams.u16_ReflowIndexCurrent++;
-		 // HAL_Delay(1);
-		  msTempControlHandler(&CtrlParams, p_ReflowCurve,p_ReflowParameters);
+		  // HAL_Delay(1);
+
 		  updateGuiVal(&CtrlParams, p_ReflowParameters, p_PhaseIndex);
 
-		  if( true == (CtrlParams.p_StatusFlags->cooldownComplete) )
+		  if( TRUE == (CtrlParams.p_StatusFlags->cooldownComplete) )
 		  {
-		  RefloWConditionsUpdate();
+			  ReflowAgain();
 		  }
 		  else
 		  {}
-		 // HAL_Delay(1);
-		  /*Add a condition if the reflow is finished to choose if you want to run reflow again or to stop.
-		   * 1.Change the flags in order that msTempControl handler can start with reflow
-		   * 2.Add second option to write on display turn OFF or restart.
-		   * */
 	  }
 	  else
 	  {
 
 	  }
-
-
-
-
-
 
   }
   /* USER CODE END 3 */
@@ -413,7 +392,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 59999;
+  htim2.Init.Prescaler = 29999;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 1;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -569,17 +548,17 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 int find_I2C_deviceAddress(void)
 {
-	uint8_t i=0;
-	for(i=0;i<255;i++)
+	uint8_t i = 0;
+	for(i = 0; i < 255; i++)
 	{
-		if(HAL_I2C_IsDeviceReady(&hi2c1,i,1,10)==HAL_OK)
+		if(HAL_I2C_IsDeviceReady(&hi2c1,i,1,10) == HAL_OK)
 		{
 			HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 			return i;
 			break;
 		}
 	}
-	return -1;//greska
+	return -1;//error
 }
 /* USER CODE END 4 */
 
@@ -592,48 +571,13 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
-
-//  /* Unlock the Flash Program Erase controller */
-//  FLASH_EraseInitTypeDef EraseInitStruct;
-//  //EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
-//  //FLASH_TYPEERASE_SECTORS
-//  EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
-//  EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_2;
-//  EraseInitStruct.Sector = 9;
-//  EraseInitStruct.NbSectors = 2;
-//  uint32_t SectorError2;
-//  volatile HAL_StatusTypeDef status_erase2;
-//  HAL_FLASH_Unlock();
+  HAL_DeInit();
+  NVIC_SystemReset(); /*Init a system reset*/
+  /*TODO To be tested*/
+//  while (1)
+//  {
 //
-//
-//  status_erase2 = HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError2);
-//
-//  /* Unlock the Flash Program Erase controller */
-//  HAL_FLASH_Unlock();
-//
-//  /* EEPROM Init */
-//   if( EE_Init() != EE_OK)
-//   {
-//	   u32_EEPromErrCnt++;
-//   }
-//
-////
-//
-//   if((EE_WriteVariable(VirtAddVarTab[1],ReflowParameters.ReflowTempeture)) != HAL_OK)
-//   {
-//	   u32_EEPromErrCnt++;
-//   }
-//   if((EE_ReadVariable(VirtAddVarTab[1],  &VarDataTab[1])) != HAL_OK)
-//   {
-//	   u32_EEPromErrCnt++;
-//   }
-//
-
-
-  while (1)
-  {
-
-  }
+//  }
   /* USER CODE END Error_Handler_Debug */
 }
 
@@ -654,4 +598,3 @@ void assert_failed(uint8_t *file, uint32_t line)
 }
 #endif /* USE_FULL_ASSERT */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

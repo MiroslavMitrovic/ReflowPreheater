@@ -1,5 +1,5 @@
 Core/Src/eeprom.o: ../Core/Src/eeprom.c ../Core/Inc/eeprom.h \
- ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
+ ../Core/Inc/main.h ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h \
@@ -29,12 +29,12 @@ Core/Src/eeprom.o: ../Core/Src/eeprom.c ../Core/Inc/eeprom.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
- ../Core/Inc/Reflow_functions.h ../Core/Inc/main.h \
- ../Core/Inc/FLASH_SECTOR.h ../Core/Inc/arm_math.h \
- ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h \
- ../Core/Inc/variables.h
+ ../Core/Inc/variables.h ../Core/Inc/Reflow_functions.h \
+ C:/Users/mmitr/git/ReflowPreheater/Drivers/CMSIS/DSP/Include/arm_math.h
 
 ../Core/Inc/eeprom.h:
+
+../Core/Inc/main.h:
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 
@@ -96,14 +96,8 @@ Core/Src/eeprom.o: ../Core/Src/eeprom.c ../Core/Inc/eeprom.h \
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 
+../Core/Inc/variables.h:
+
 ../Core/Inc/Reflow_functions.h:
 
-../Core/Inc/main.h:
-
-../Core/Inc/FLASH_SECTOR.h:
-
-../Core/Inc/arm_math.h:
-
-../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h:
-
-../Core/Inc/variables.h:
+C:/Users/mmitr/git/ReflowPreheater/Drivers/CMSIS/DSP/Include/arm_math.h:

@@ -23,10 +23,8 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "variables.h"
 #include <stdio_ext.h>
-#include "arm_math.h"
-#include "Reflow_functions.h"
+#include "variables.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -242,7 +240,7 @@ void EXTI9_5_IRQHandler(void)
 
 
   /* USER CODE END EXTI9_5_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
+  HAL_GPIO_EXTI_IRQHandler(ZeroCrossingPin_Pin);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
 
 
@@ -257,9 +255,9 @@ void TIM2_IRQHandler(void)
   /* USER CODE BEGIN TIM2_IRQn 0 */
 	ms_counterEncButton++;
 	ms_counter++;
-	CtrlParams.counter_200ms++;
-	CtrlParams.counter_1000ms++;
 	CtrlParams.counter_250ms++;
+	CtrlParams.counter_1000ms++;
+	CtrlParams.counter_500ms++;
 
 	if(1 == ms_counter)
 	{
@@ -270,6 +268,10 @@ void TIM2_IRQHandler(void)
 	else
 	{
 		/*Do nothing*/
+	}
+	if(0 == (ms_counter % 500) )
+	{
+		//HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
 	}
 
   /* USER CODE END TIM2_IRQn 0 */
@@ -287,16 +289,16 @@ void EXTI15_10_IRQHandler(void)
   /* USER CODE BEGIN EXTI15_10_IRQn 0 */
 
   /* USER CODE END EXTI15_10_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_10);
+  HAL_GPIO_EXTI_IRQHandler(EncoderButtonPin_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
 
 
   if(ms_counterEncButton > 80)
   {
 
-		  interruptCnt++;
+
 		  HAL_GPIO_TogglePin(LD3_GPIO_Port,LD3_Pin);
-		  ui8_encButtonPressed = true;
+		  ui8_encButtonPressed = TRUE;
 
 		  ms_counterEncButton = 0;
   }
@@ -320,30 +322,30 @@ unsigned long millis(void)
 }
 bool debouncingFunct(ulong debounceVal)
 {
-	static ulong startDebounceTime=0;
-	static ulong currentDebounceTime=0;
-	static ulong dbncCnt=0;
-	static uint8_t debouncingStat=false;
-	if(0==dbncCnt)
+	static ulong startDebounceTime = 0;
+	static ulong currentDebounceTime = 0;
+	static ulong dbncCnt = 0;
+	static uint8_t debouncingStat = FALSE;
+	if(0 == dbncCnt)
 	{
-		startDebounceTime=millis();
+		startDebounceTime = millis();
 	}
 	else
 	{
 		//do nothing
 	}
 
-	currentDebounceTime=millis();
+	currentDebounceTime = millis();
 
 	//Debouncing check
-	if(currentDebounceTime>(startDebounceTime+debounceVal))
+	if(currentDebounceTime > (startDebounceTime + debounceVal) )
 	{
-		debouncingStat=true;
-		dbncCnt=0;
+		debouncingStat = TRUE;
+		dbncCnt = 0;
 	}
 	else
 	{
-		debouncingStat=false;
+		debouncingStat = FALSE;
 		dbncCnt++;
 	}
 
@@ -353,4 +355,4 @@ bool debouncingFunct(ulong debounceVal)
 
 }
 /* USER CODE END 1 */
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
