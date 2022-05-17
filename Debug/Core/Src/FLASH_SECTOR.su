@@ -1,5 +1,5 @@
-FLASH_SECTOR.c:33:10:GetSector	24	static
-FLASH_SECTOR.c:97:17:GetSectorSize	24	static
-FLASH_SECTOR.c:119:10:Flash_Write_Data	40	static
-FLASH_SECTOR.c:175:6:Flash_Read_Data	24	static
-FLASH_SECTOR.c:187:6:Convert_To_Str	32	static
+../Core/Src/FLASH_SECTOR.c:33:10:GetSector	24	static
+../Core/Src/FLASH_SECTOR.c:97:17:GetSectorSize	24	static
+../Core/Src/FLASH_SECTOR.c:119:10:Flash_Write_Data	48	static
+../Core/Src/FLASH_SECTOR.c:175:6:Flash_Read_Data	24	static
+../Core/Src/FLASH_SECTOR.c:187:6:Convert_To_Str	32	static

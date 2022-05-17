@@ -255,6 +255,8 @@ void TIM2_IRQHandler(void)
   /* USER CODE BEGIN TIM2_IRQn 0 */
 	ms_counterEncButton++;
 	ms_counter++;
+	CtrlParams.counter_1ms++;
+	CtrlParams.counter_10ms++;
 	CtrlParams.counter_250ms++;
 	CtrlParams.counter_1000ms++;
 	CtrlParams.counter_500ms++;

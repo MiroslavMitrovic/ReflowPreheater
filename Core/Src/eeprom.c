@@ -702,6 +702,8 @@ HAL_StatusTypeDef FEE_WriteCtrlParams(msTempControlParams* p_CtrlParams, ReflowT
 	uint8_t ui8_bank1Percentage = p_CtrlParams->ui8_bank1Percentage;
 	uint8_t ui8_bank2Percentage = p_CtrlParams->ui8_bank2Percentage;
 	uint16_t u16_KP = (uint16_t)p_ReflowParameters->KP;
+	uint16_t u16_KI = (uint16_t)p_ReflowParameters->KI;
+	uint16_t u16_KD = (uint16_t)p_ReflowParameters->KD;
 	uint16_t u16_firstHeatUpRate = (uint16_t)(p_ReflowParameters->firstHeatUpRate * 100.0);
 	uint16_t u16_secondHeatUpRate = (uint16_t)(p_ReflowParameters->secondHeatUpRate * 100.0);
 	uint16_t u16_SoakTime = (uint16_t)p_ReflowParameters->SoakTime;
@@ -723,6 +725,16 @@ HAL_StatusTypeDef FEE_WriteCtrlParams(msTempControlParams* p_CtrlParams, ReflowT
 	}
 
 	if((EE_WriteVariable(KP_VirtAddr,  u16_KP)) != HAL_OK)
+	{
+		result = HAL_ERROR;
+		Error_Handler();
+	}
+	if((EE_WriteVariable(KI_VirtAddr,  u16_KI)) != HAL_OK)
+	{
+		result = HAL_ERROR;
+		Error_Handler();
+	}
+	if((EE_WriteVariable(KD_VirtAddr,  u16_KD)) != HAL_OK)
 	{
 		result = HAL_ERROR;
 		Error_Handler();
@@ -773,6 +785,8 @@ HAL_StatusTypeDef FEE_ReadCtrlParams(msTempControlParams* p_CtrlParams, ReflowTe
 	uint16_t *p_bank1Percentage =	(uint16_t*)&p_CtrlParams->ui8_bank1Percentage;
 	uint16_t *p_bank2Percentage =	(uint16_t*)&p_CtrlParams->ui8_bank2Percentage;
 	uint16_t *p_KP = 				(uint16_t*)&p_ReflowParameters->KP;
+	uint16_t *p_KI = 				(uint16_t*)&p_ReflowParameters->KI;
+	uint16_t *p_KD = 				(uint16_t*)&p_ReflowParameters->KD;
 	uint16_t *p_firstHeatUpRate =	(uint16_t*)&p_ReflowParameters->firstHeatUpRate;
 	uint16_t *p_secondHeatUpRate =	(uint16_t*)&p_ReflowParameters->secondHeatUpRate;
 	uint16_t *p_SoakTime = 			(uint16_t*)&p_ReflowParameters->SoakTime;
@@ -808,6 +822,16 @@ HAL_StatusTypeDef FEE_ReadCtrlParams(msTempControlParams* p_CtrlParams, ReflowTe
 	}
 
 	if((EE_ReadVariable(KP_VirtAddr,  p_KP)) != HAL_OK)
+	{
+		result = HAL_ERROR;
+		//Error_Handler();
+	}
+	if((EE_ReadVariable(KI_VirtAddr,  p_KI)) != HAL_OK)
+	{
+		result = HAL_ERROR;
+		//Error_Handler();
+	}
+	if((EE_ReadVariable(KD_VirtAddr,  p_KD)) != HAL_OK)
 	{
 		result = HAL_ERROR;
 		//Error_Handler();
@@ -853,6 +877,8 @@ HAL_StatusTypeDef FEE_ReadCtrlParams(msTempControlParams* p_CtrlParams, ReflowTe
 		p_CtrlParams->ui8_bank1Percentage = 		(uint8_t)*p_bank1Percentage;
 		p_CtrlParams->ui8_bank2Percentage = 		(uint8_t)*p_bank2Percentage;
 		p_ReflowParameters->KP = 				(float32_t)*p_KP;
+		p_ReflowParameters->KI = 				(float32_t)*p_KI;
+		p_ReflowParameters->KD = 				(float32_t)*p_KD;
 		p_ReflowParameters->firstHeatUpRate = 	(float32_t) ( (*p_firstHeatUpRate) / 100.0);
 		p_ReflowParameters->secondHeatUpRate =	(float32_t) ( (*p_secondHeatUpRate) / 100.0);
 		p_ReflowParameters->SoakTime = 			(uint32_t)*p_SoakTime;

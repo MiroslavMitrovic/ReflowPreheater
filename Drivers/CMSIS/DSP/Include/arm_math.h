@@ -4787,7 +4787,14 @@ void arm_rfft_fast_f32(
     S->state[1] = S->state[0];
     S->state[0] = in;
     S->state[2] = out;
-
+//    if(0 > out )
+//    {
+//    	out = 0;
+//    }
+//    if (999 < out)
+//    {
+//    	out = 999;
+//    }
     /* return to application */
     return (out);
 

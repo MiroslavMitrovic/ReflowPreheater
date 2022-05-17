@@ -94,7 +94,9 @@ typedef enum FEE_Vars
 	ReflowTime_VirtAddr = 0xAAA6,
 	ui8_bank1Percentage_VirtAddr = 0xAAA7,
 	ui8_bank2Percentage_VirtAddr = 0xAAA8,
-	MaxNumOfVirtAddr = 10
+	KI_VirtAddr = 0xAAA9,
+	KD_VirtAddr = 0xAAAA,
+	MaxNumOfVirtAddr = 12
 }FEE_VirtAddr;
 
 

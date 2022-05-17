@@ -93,7 +93,7 @@ void lcd_init_2 (void)
 	for(i=0;i<3;i++)//sending 3 times: select 4-bit mode
 	{
 		lcd_send_cmd(0x03);
-		HAL_Delay(10);
+		HAL_Delay(5);
 	}
 	//4
 	lcd_send_cmd (0x02); //to set to 4-bit mode
@@ -130,20 +130,20 @@ void lcd_init (void)
 	lcd_send_cmd (0x30);
 	HAL_Delay(1);  // wait for >100us
 	lcd_send_cmd (0x30);
-	HAL_Delay(50);
+	HAL_Delay(50);	//possible issue here, no delay in LCD function
 	lcd_send_cmd (0x20);  // 4bit mode
-	HAL_Delay(50);
+	//HAL_Delay(50);
 
   // dislay initialisation
 	lcd_send_cmd (0x28); // Function set --> DL=0 (4 bit mode), N = 1 (2 line display) F = 0 (5x8 characters)
-	HAL_Delay(50);
+	//HAL_Delay(50);
 	lcd_send_cmd (0x08); //Display on/off control --> D=0,C=0, B=0  ---> display off
-	HAL_Delay(50);
+	//HAL_Delay(50);
 	lcd_send_cmd (0x01);  // clear display
-	HAL_Delay(50);
-	HAL_Delay(50);
+	HAL_Delay(2);
+	//HAL_Delay(50);
 	lcd_send_cmd (0x06); //Entry mode set --> I/D = 1 (increment cursor) & S = 0 (no shift)
-	HAL_Delay(50);
+	HAL_Delay(2);
 	lcd_send_cmd (0x0C); //Display on/off control --> D = 1, C and B = 0. (Cursor and blink, last two bits)
 }
 

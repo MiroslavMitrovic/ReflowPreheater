@@ -171,7 +171,7 @@ uint32_t Flash_Write_Data (uint32_t StartSectorAddress, uint32_t *DATA_32)
 
 	return 0;
 }
-//TODO Write the reflow data into ROM, then read from it. Define RO sections and write the data there.
+
 void Flash_Read_Data (uint32_t StartSectorAddress, __IO uint32_t *DATA_32)
 {
 	uint32_t *p_Data = (uint32_t* ) DATA_32;

@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "eeprom.h"
+#include "variables.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,6 +50,7 @@ SPI_HandleTypeDef hspi1;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN PV */
 
@@ -62,6 +64,7 @@ static void MX_TIM1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -114,11 +117,12 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   //TODO add Ki and KD as parameters for entering, and add them in FEE.
   ReflowParameters.KD = 0.3;
   ReflowParameters.KP = 200; //125
-  ReflowParameters.Ki = 1.1;
+  ReflowParameters.KI = 1.1;
   ReflowParameters.ReflowTempeture = 250;
   ReflowParameters.ReflowTime = 100;
   ReflowParameters.SoakTempeture = 100;
@@ -126,7 +130,7 @@ int main(void)
   ReflowParameters.firstHeatUpRate = 2;
   ReflowParameters.secondHeatUpRate = 2;
   PID.Kp = ReflowParameters.KP;
-  PID.Ki = ReflowParameters.Ki;
+  PID.Ki = ReflowParameters.KI;
   PID.Kd = ReflowParameters.KD;
   for(int i = 0;i < 5; i++)
 {
@@ -179,10 +183,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  if (10 <= CtrlParams.counter_10ms)
+	  {
+		  CtrlParams.counter_10ms = 0;
+		  msTempControlHandler(&CtrlParams, p_ReflowCurve, p_ReflowParameters);
+
+	  }
 	  if(250 <= CtrlParams.counter_250ms)
 	  {
 		  CtrlParams.counter_250ms = 0;
-		  msTempControlHandler(&CtrlParams, p_ReflowCurve, p_ReflowParameters);
+		  getTemperatureData(CtrlParams.p_temperature);
+		  //msTempControlHandler(&CtrlParams, p_ReflowCurve, p_ReflowParameters);
 	  }
 	  if(500 <= CtrlParams.counter_500ms)
 	  {
@@ -482,6 +493,44 @@ static void MX_TIM3_Init(void)
 }
 
 /**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 1;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 65535;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -573,7 +622,6 @@ void Error_Handler(void)
   __disable_irq();
   HAL_DeInit();
   NVIC_SystemReset(); /*Init a system reset*/
-  /*TODO To be tested*/
 //  while (1)
 //  {
 //
@@ -597,4 +645,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-

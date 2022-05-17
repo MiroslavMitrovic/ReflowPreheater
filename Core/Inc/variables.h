@@ -42,7 +42,8 @@ Setup variable declaration macros.
 # define _INIT(x)  = x
 #endif
 #define ULONG_MAX 					0xFFFFFFFFUL
-
+#define TRUE						1UL
+#define FALSE						0UL
 /*----------------------------------------------
 Declare variables as follows:
 
@@ -56,11 +57,10 @@ _DECL [standard variable declaration];
 ----------------------------------------------*/
 
 
-uint8_t PIDFlag;
+extern uint8_t PIDFlag;
 _DECL volatile float temperature _INIT(0);
 _DECL volatile float PIDerror _INIT(0);
 _DECL uint8_t State _INIT(0);
-_DECL arm_pid_instance_f32 PID;
 _DECL volatile float *p_temperature _INIT(&temperature);
 _DECL uint16_t ReflowCurve_main[15000] _INIT(0);
 _DECL uint16_t PhaseIndex_main[6];
@@ -76,5 +76,6 @@ _DECL uint16_t *p_PhaseIndex;
 
 
 
-#endif
+#endif /* __VARIABLES_H_*/
+
 //

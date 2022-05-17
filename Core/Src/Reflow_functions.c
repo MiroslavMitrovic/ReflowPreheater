@@ -25,6 +25,7 @@
 #include "FLASH_SECTOR.h"
 
 
+
 /* Global Variables------------------------------------------------------------*/
 const float  alpha = 0.1;				///< Coefficient for filter
 static float avg_temp =	-100;			///< Start value for average temperature calculation
@@ -39,12 +40,12 @@ uint8_t ui8_bank1Percentage;
 uint8_t ui8_bank2Percentage;
 volatile uint8_t ui8_encButtonPressed;
 
-extern uint8_t PIDFlag;
+uint8_t PIDFlag;
 uint16_t counterBank1;
 uint16_t counterBank2;
 arm_pid_instance_f32 PID;
 msTempControlParams *p_CtrlParams = &CtrlParams;
-uint32_t u32_EEPromErrCnt;
+extern uint32_t u32_EEPromErrCnt;
 void reverse(unsigned char* str, int len)
 {
     int i = 0, j = len - 1, temp;
@@ -198,13 +199,15 @@ void HandleGui()
 	f_GuiMenuReflowTime(p_ReflowParameters);
 	f_GuiMenuSoakTempGrad(p_ReflowParameters);
 	f_GuiMenuKPUpdate(p_ReflowParameters);
+	f_GuiMenuKIUpdate(p_ReflowParameters);
+	f_GuiMenuKDUpdate(p_ReflowParameters);
 	f_GuiMenuReflowTempGrad(p_ReflowParameters);
 	f_GuiMenuBank1Update(p_CtrlParams);
 	f_GuiMenuBank2Update(p_CtrlParams);
 	f_GuiFEEUpdateWrite(p_CtrlParams, p_ReflowParameters);
 }
 
-static void readTemperatureData(volatile float* p_temperature_val)
+static void readTemperatureData(volatile float32_t* p_temperature_val)
 {
 	uint8_t data8[2] = {0};
 	uint16_t sum = {0};
@@ -228,7 +231,7 @@ static void readTemperatureData(volatile float* p_temperature_val)
 }
 
 
- void  readTemperatureData_ex(volatile float* p_temperature_val)
+ void  readTemperatureData_ex(volatile float32_t* p_temperature_val)
 {
 	uint8_t data8[2] = {0};
 	uint16_t sum = {0};
@@ -251,6 +254,13 @@ static void readTemperatureData(volatile float* p_temperature_val)
 
 }
 
+
+ getTemperatureData(volatile float32_t* p_temperature_val)
+ {
+
+	 readTemperatureData(p_temperature_val);
+
+ }
 
 
 void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCurve, ReflowTemplate *p_ReflowParameters )
@@ -274,12 +284,12 @@ void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCur
 
 
   PID.Kp = p_ReflowParameters->KP;
-  PID.Ki = p_ReflowParameters->Ki;
+  PID.Ki = p_ReflowParameters->KI;
   PID.Kd = p_ReflowParameters->KD;
   f32_Temperature = 0;
   u16_PIDBank1 = 0;
   u16_PIDBank2 = 0;
-
+  //f32_PidCorr = 0;
   if( ((*p_bank1Percentage) != 0) &&  ((*p_bank2Percentage) != 0) )
   {
 	  ui16_Bank1Limit = 999 * (*p_bank1Percentage) / 100;
@@ -291,7 +301,7 @@ void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCur
   }
 
   /*Temperature Readout*/
-  readTemperatureData(p_temperature);
+  //readTemperatureData(p_temperature);
   if(avg_temp == -100)
   {
 	  avg_temp = (*p_temperature);
@@ -307,14 +317,25 @@ void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCur
 
   if(TRUE == StateFlag.StartFlag)
   {
-	  f32_pid_error = (float32_t) *(p_ReflowCurve+ReflowIndex) - f32_Temperature;
+	  f32_pid_error =  (float32_t) *(p_ReflowCurve+ReflowIndex) - f32_Temperature;
 	  *p_PIDError = f32_pid_error;
 	  *(CtrlParams->p_PIDError) = *(p_PIDError);
 
 	  //Correction
-	  f32_PidCorr = arm_pid_f32(&PID, f32_pid_error);
-	  u32_PidCorr = (uint32_t)f32_PidCorr;
+	  f32_PidCorr =  arm_pid_f32(&PID, (f32_pid_error ));
 
+	  if( 0 > f32_pid_error )
+	  {
+		  PID.Ki = 0 ; /*Stop integrating when the setpoint is reached*/
+		  arm_pid_reset_f32(&PID);
+	  }
+	  else
+	  {
+		  PID.Ki = p_ReflowParameters->KI;
+	  }
+
+
+	  u32_PidCorr = (uint32_t)f32_PidCorr;
 	  //Correction limits bank1-set value
 	  if (u32_PidCorr > (ui16_Bank1Limit))
 	  {
@@ -327,6 +348,7 @@ void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCur
 	  //Correction limits bank2-set value
 	  if(u32_PidCorr > ui16_Bank2Limit)
 	  {
+
 		  u16_PIDBank2 = ui16_Bank2Limit;
 	  }
 	  else
@@ -430,7 +452,7 @@ void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCur
 	  ReflowIndex = 0;
   }
 }
-//TODO Check if the u16_ReflowIndexCurrent should be divided by 2 or not. Timing issue
+
 void updateGuiVal(msTempControlParams* CtrlParams, ReflowTemplate *p_ReflowParameters, uint16_t *p_PhaseIndex)
 {
 	volatile float32_t *p_temperature	= CtrlParams->p_temperature;
@@ -923,7 +945,7 @@ void f_GuiMenuKIUpdate(ReflowTemplate *p_ReflowParameters)
 	//###################Menu7##########################
 	HAL_Delay(100);
 	lcd_clear_cmd();
-	TIM1->CNT = (uint16_t)p_ReflowParameters->KP * 4;
+	TIM1->CNT = (uint16_t)p_ReflowParameters->KI * 4;
 
 	while(1)
 	{
@@ -949,7 +971,7 @@ void f_GuiMenuKIUpdate(ReflowTemplate *p_ReflowParameters)
 
 		if(TRUE == ui8_encButtonPressed)
 		{
-			p_ReflowParameters->Ki = (float32_t)u16_encoder_cnt_loc;
+			p_ReflowParameters->KI = (float32_t)u16_encoder_cnt_loc;
 			ui8_encButtonPressed = FALSE;
 			break;
 		}
@@ -964,7 +986,7 @@ void f_GuiMenuKDUpdate(ReflowTemplate *p_ReflowParameters)
 	//###################Menu8##########################
 	HAL_Delay(100);
 	lcd_clear_cmd();
-	TIM1->CNT = (uint16_t)p_ReflowParameters->KP * 4;
+	TIM1->CNT = (uint16_t)p_ReflowParameters->KD * 4;
 
 	while(1)
 	{
@@ -981,9 +1003,9 @@ void f_GuiMenuKDUpdate(ReflowTemplate *p_ReflowParameters)
 		sprintf((char*)&enc_string,"%u",u16_encoder_cnt_loc);
 		lcd_clear_cmd();
 		lcd_put_cur(0, 0);
-		lcd_send_string("Enter KI");
+		lcd_send_string("Enter KD");
 		lcd_put_cur(1, 0);
-		lcd_send_string("KI=");
+		lcd_send_string("KD=");
 		lcd_put_cur(1, 4);
 		lcd_send_string((char*)&enc_string);
 		HAL_Delay(200);

@@ -90,6 +90,9 @@ typedef struct
 	uint8_t ui8_bank1Percentage;
 	uint8_t ui8_bank2Percentage;
 	uint16_t u16_ReflowIndexCurrent;
+	uint32_t counter_1ms;
+	uint32_t counter_10ms;
+	uint32_t counter_100ms;
 	uint32_t counter_250ms;
 	uint32_t counter_1000ms;
 	uint32_t counter_500ms;
@@ -101,7 +104,7 @@ typedef struct
 
 typedef struct {
 	float32_t	KP;
-	float32_t	Ki;
+	float32_t	KI;
 	float32_t	KD;
 	float32_t	firstHeatUpRate;
 	uint32_t	SoakTempeture;
@@ -113,6 +116,8 @@ typedef struct {
 
 extern ReflowTemplate ReflowParameters;
 extern msTempControlParams CtrlParams;
+extern arm_pid_instance_f32 PID;
+
 
 /* Functions ---------------------------------------------------------------------*/
 
@@ -141,8 +146,8 @@ void HandleGui();
  *  @return none
  */
 static void readTemperatureData(volatile float* p_temperature_val);
-/** @brief Get Temperature data \n
- * Get temperature value from MAX6675 interface
+/** @brief read Temperature data \n
+ * read temperature value from MAX6675 interface
  *
  *  @param[out] p_temperature_val pointer to the temperature value from thermocouple
  *  @return none
@@ -157,6 +162,14 @@ void readTemperatureData_ex(volatile float* p_temperature_val);
  *  @param[in] p_ReflowParameters pointer where Reflow parameters are stored
  *  @return none
  */
+/** @brief Get Temperature data \n
+ * Get temperature value from MAX6675 interface
+ *
+ *  @param[out] p_temperature_val pointer to the temperature value
+ *  @return none
+ */
+void getTemperatureData(volatile float* p_temperature_val);
+
 void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCurve, ReflowTemplate *p_ReflowParameters);
 /** @brief Show current Temperature and Time remaining values on LCD\n
  *  This Function controls shows current Temperature and Time remaining values on LCD and also error as difference between set and measured temperature.
