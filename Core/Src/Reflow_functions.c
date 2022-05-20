@@ -276,6 +276,7 @@ void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCur
   uint16_t ui16_Bank1Limit;
   uint16_t ui16_Bank2Limit;
   volatile 	float32_t	f32_pid_error;
+  static 	volatile  	int32_t	i32_pid_error;
   volatile 	float32_t	f32_Temperature;
   static 	float32_t	f32_PidCorr;
   static	uint32_t	u32_PidCorr;
@@ -323,19 +324,29 @@ void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCur
 
 	  //Correction
 	  f32_PidCorr =  arm_pid_f32(&PID, (f32_pid_error ));
+	  u32_PidCorr = (uint32_t)f32_PidCorr;
+	  i32_pid_error = (int32_t)((f32_pid_error * 100.00));
 
-	  if( 0 > f32_pid_error )
+	  if( 0 > i32_pid_error )
 	  {
 		  PID.Ki = 0 ; /*Stop integrating when the setpoint is reached*/
-		  arm_pid_reset_f32(&PID);
+		  PID.state[2] = 0;
+		  u32_PidCorr = 0;
 	  }
 	  else
 	  {
 		  PID.Ki = p_ReflowParameters->KI;
 	  }
+	  if( 999 < u32_PidCorr )
+	  {
+		  PID.Ki = 0 ; /*Stop integrating when the max value is reached*/
+		  PID.state[2] = 999;
+		  //arm_pid_reset_f32(&PID);
+	  }
+	  else{}
 
 
-	  u32_PidCorr = (uint32_t)f32_PidCorr;
+
 	  //Correction limits bank1-set value
 	  if (u32_PidCorr > (ui16_Bank1Limit))
 	  {
