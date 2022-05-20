@@ -341,7 +341,7 @@ void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCur
 	  {
 		  PID.Ki = 0 ; /*Stop integrating when the max value is reached*/
 		  PID.state[2] = 999;
-		  //arm_pid_reset_f32(&PID);
+
 	  }
 	  else{}
 
@@ -545,7 +545,7 @@ void ResetFlags(void)
 
 }
 
-//TODO Better logic to be implemented
+
 void ReflowAgain(void)
 {
 	uint16_t u16_Counter = 0;
@@ -562,41 +562,34 @@ void ReflowAgain(void)
 
 		if((10 < u16_Counter)  )
 		{
+			TIM1->CNT = 11;
 			lcd_put_cur(1, 5);
 			lcd_send_cmd(LCD_BLINK_CURSOR_ON);
-			while(1)
-			{
-				if(TRUE == ui8_encButtonPressed)
-				{
-					lcd_clear_cmd();
-					lcd_put_cur(0, 0);
-					lcd_send_string("Turn OFF or");
-					lcd_put_cur(1, 0);
-					lcd_send_string("Restart!");
-					lcd_send_cmd(LCD_CURSOR_OFF);
 
-					ui8_encButtonPressed = FALSE;
-					break;
-				}
+			if(TRUE == ui8_encButtonPressed)
+			{
+				lcd_clear_cmd();
+				lcd_put_cur(0, 0);
+				lcd_send_string("Turn OFF or");
+				lcd_put_cur(1, 0);
+				lcd_send_string("Restart!");
+				lcd_send_cmd(LCD_CURSOR_OFF);
+				ui8_encButtonPressed = FALSE;
+				break;
 			}
-			break;
+
 		}
 		else if ( (10 > u16_Counter))
 		{
+			TIM1->CNT = 9;
 			lcd_put_cur(1, 0);
 			lcd_send_cmd(LCD_BLINK_CURSOR_ON);
-			while(1)
+
+			if(TRUE == ui8_encButtonPressed)
 			{
-				if(TRUE == ui8_encButtonPressed)
-				{
-					ResetFlags();
-					ui8_encButtonPressed = FALSE;
-					NVIC_SystemReset(); /*Init a system reset*/
-
-					break;
-
-				}
-
+				ResetFlags();
+				ui8_encButtonPressed = FALSE;
+				NVIC_SystemReset(); /*Init a system reset*/
 			}
 		}
 
