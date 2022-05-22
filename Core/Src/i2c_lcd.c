@@ -73,49 +73,63 @@ void lcd_clear_cmd(void)
 
 void lcd_put_cur(int row, int col)
 {
-    switch (row)
-    {
-        case 0:
-            col |= 0x80;
-            break;
-        case 1:
-            col |= 0xC0;
-            break;
-    }
+	switch (row)
+	{
+	case 0:
+		col |= 0x80;
+		break;
+	case 1:
+		col |= 0xC0;
+		break;
+	}
 
-    lcd_send_cmd (col);
+	lcd_send_cmd (col);
 }
 
 void lcd_init_2 (void)
 {
 	uint8_t i=0;
 	HAL_Delay(20);
+	for(i=0;i<4;i++)//sending 4 times: select 8-bit mode
+	{
+		HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x30,1, 500);
+		HAL_Delay(5);
+	}
+	i=0;
+	for(i=0;i<3;i++)//sending 3 times: select 8-bit mode
+	{
+		HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x00,1, 500);
+		HAL_Delay(5);
+	}
+	HAL_Delay(500);
+	i=0;
 	for(i=0;i<3;i++)//sending 3 times: select 4-bit mode
 	{
-		lcd_send_cmd(0x03);
+		HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x30,1, 500);
 		HAL_Delay(5);
 	}
 	//4
-	lcd_send_cmd (0x02); //to set to 4-bit mode
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x20,1, 500); //to set to 4-bit mode
 	//5
 	HAL_Delay(10);
-	lcd_send_cmd (0x20);
-	lcd_send_cmd (0x28); // Function set --> DL=0 (4 bit mode), N = 1 (2 line display) F = 0 (5x8 characters)
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x20,1, 500); //to set to 4-bit mode
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x28,1, 500); // Function set --> DL=0 (4 bit mode), N = 1 (2 line display) F = 0 (5x8 characters)
 	//6
 	HAL_Delay(10);
-	lcd_send_cmd (0x00);
-	lcd_send_cmd (0x80);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x00,1, 500);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x80,1, 500);
 	//7
 	HAL_Delay(10);
-	lcd_send_cmd (0x00);
-	lcd_send_cmd(0x10);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x00,1, 500);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x10,1, 500);
 	//8
 	HAL_Delay(10);
-	lcd_send_cmd (0x00);
-	lcd_send_cmd(0x40);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x00,1, 500);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x40,1, 500);
 	HAL_Delay(10);
-	lcd_send_cmd (0x00);
-	lcd_send_cmd (LCD_TURN_ON);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x00,1, 500);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, LCD_TURN_ON,1, 500);
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x08,1, 500);
 	HAL_Delay(10);
 }
 
@@ -123,22 +137,25 @@ void lcd_init_2 (void)
 
 void lcd_init (void)
 {
+	lcd_send_cmd(LCD_TURN_OFF);
+	HAL_Delay(50);  // wait for >40ms
+	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x00,1, 500);
+
 	// 4 bit initialisation
 	HAL_Delay(50);  // wait for >40ms
 	lcd_send_cmd (0x30);
-	HAL_Delay(5);  // wait for >4.1ms
+	HAL_Delay(50);  // wait for >4.1ms
 	lcd_send_cmd (0x30);
-	HAL_Delay(1);  // wait for >100us
+	HAL_Delay(10);  // wait for >100us
 	lcd_send_cmd (0x30);
-	HAL_Delay(50);	//possible issue here, no delay in LCD function
+	HAL_Delay(50);
 	lcd_send_cmd (0x20);  // 4bit mode
-	//HAL_Delay(50);
-
-  // dislay initialisation
+	// dislay initialisation
+	HAL_Delay(500);
 	lcd_send_cmd (0x28); // Function set --> DL=0 (4 bit mode), N = 1 (2 line display) F = 0 (5x8 characters)
-	//HAL_Delay(50);
+	HAL_Delay(50);
 	lcd_send_cmd (0x08); //Display on/off control --> D=0,C=0, B=0  ---> display off
-	//HAL_Delay(50);
+	HAL_Delay(50);
 	lcd_send_cmd (0x01);  // clear display
 	HAL_Delay(2);
 	//HAL_Delay(50);

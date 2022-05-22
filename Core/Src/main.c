@@ -107,7 +107,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  HAL_I2C_DeInit(&hi2c1);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -147,8 +147,15 @@ int main(void)
  // address=find_I2C_deviceAddress();
  // HAL_Delay(2000);
   ResetFlags();
-  HAL_Delay(500);
-  lcd_init();
+  //init_I2C_expander();
+  //HAL_Delay(500);
+  //lcd_clear_cmd();
+  HAL_I2C_DeInit(&hi2c1);
+  HAL_Delay(1000);
+  HAL_I2C_Init(&hi2c1);
+  HAL_Delay(1000);
+ // lcd_init_2();
+   lcd_init();
   HAL_Delay(20);
   lcd_clear();
   HAL_Delay(100);
@@ -162,6 +169,7 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim2);
 
   HAL_Delay(500);
+
   /*GUI for data entry*/
   HandleGui();
 
@@ -180,20 +188,21 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 	  if (10 <= CtrlParams.counter_10ms)
 	  {
 		  CtrlParams.counter_10ms = 0;
-		  msTempControlHandler(&CtrlParams, p_ReflowCurve, p_ReflowParameters);
+		 // msTempControlHandler(&CtrlParams, p_ReflowCurve, p_ReflowParameters);
 
 	  }
 	  if(250 <= CtrlParams.counter_250ms)
 	  {
 		  CtrlParams.counter_250ms = 0;
 		  getTemperatureData(CtrlParams.p_temperature);
-		  //msTempControlHandler(&CtrlParams, p_ReflowCurve, p_ReflowParameters);
+		  msTempControlHandler(&CtrlParams, p_ReflowCurve, p_ReflowParameters);
 	  }
 	  if(500 <= CtrlParams.counter_500ms)
 	  {

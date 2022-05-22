@@ -556,6 +556,7 @@ void ReflowAgain(void)
 	lcd_put_cur(1, 0);
 	lcd_send_string("Yes/No");
 	TIM1->CNT = 10;
+	ui8_encButtonPressed = FALSE;
 	while(1)
 	{
 		u16_Counter = TIM1->CNT;
@@ -575,6 +576,7 @@ void ReflowAgain(void)
 				lcd_send_string("Restart!");
 				lcd_send_cmd(LCD_CURSOR_OFF);
 				ui8_encButtonPressed = FALSE;
+				HAL_Delay(5000);
 				break;
 			}
 
