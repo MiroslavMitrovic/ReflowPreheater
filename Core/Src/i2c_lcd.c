@@ -139,6 +139,8 @@ void lcd_init (void)
 {
 	lcd_send_cmd(LCD_TURN_OFF);
 	HAL_Delay(50);  // wait for >40ms
+	lcd_send_cmd(LCD_NOBACKLIGHT);
+	HAL_Delay(50);  // wait for >40ms
 	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x00,1, 500);
 
 	// 4 bit initialisation
