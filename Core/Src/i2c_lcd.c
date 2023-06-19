@@ -45,19 +45,19 @@ void lcd_send_data (char data)
 {
 	char data_u, data_l;
 	uint8_t data_t[4];
-	data_u = (data&0xf0);
-	data_l = ((data<<4)&0xf0);
-	data_t[0] = data_u|0x0D;  //en=1, rs=1
-	data_t[1] = data_u|0x09;  //en=0, rs=1
-	data_t[2] = data_l|0x0D;  //en=1, rs=1
-	data_t[3] = data_l|0x09;  //en=0, rs=1
+	data_u = (data & 0xf0);
+	data_l = ( (data << 4)& 0xf0 );
+	data_t[0] = data_u | 0x0D;  //en=1, rs=1
+	data_t[1] = data_u | 0x09;  //en=0, rs=1
+	data_t[2] = data_l | 0x0D;  //en=1, rs=1
+	data_t[3] = data_l | 0x09;  //en=0, rs=1
 	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD,(uint8_t *) data_t, 4, 100);
 }
 
 void lcd_clear (void)
 {
 	lcd_send_cmd (0x80);
-	for (int i=0; i<70; i++)
+	for (int i = 0; i< 70; i++)
 	{
 		lcd_send_data (' ');
 	}
@@ -90,20 +90,20 @@ void lcd_init_2 (void)
 {
 	uint8_t i=0;
 	HAL_Delay(20);
-	for(i=0;i<4;i++)//sending 4 times: select 8-bit mode
+	for(i=0; i < 4; i++)//sending 4 times: select 8-bit mode
 	{
 		HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x30,1, 500);
 		HAL_Delay(5);
 	}
 	i=0;
-	for(i=0;i<3;i++)//sending 3 times: select 8-bit mode
+	for(i=0; i < 3; i++)//sending 3 times: select 8-bit mode
 	{
 		HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x00,1, 500);
 		HAL_Delay(5);
 	}
 	HAL_Delay(500);
 	i=0;
-	for(i=0;i<3;i++)//sending 3 times: select 4-bit mode
+	for(i=0; i < 3; i++)//sending 3 times: select 4-bit mode
 	{
 		HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD, 0x30,1, 500);
 		HAL_Delay(5);

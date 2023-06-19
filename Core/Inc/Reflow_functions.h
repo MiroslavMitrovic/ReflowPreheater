@@ -153,7 +153,13 @@ static void readTemperatureData(volatile float* p_temperature_val);
  *  @return none
  */
 void readTemperatureData_ex(volatile float* p_temperature_val);
-
+/** @brief read Temperature data \n
+ * read temperature value from MAX6675 interface
+ *
+ *  @param[out] p_temperature_val pointer to the temperature value from thermocouple
+ *  @return none
+ */
+void getTemperatureData(volatile float* p_temperature_val);
 /** @brief Control of Heaters \n
  *  This Function controls the heating process according to the input parameters
  *
@@ -168,8 +174,6 @@ void readTemperatureData_ex(volatile float* p_temperature_val);
  *  @param[out] p_temperature_val pointer to the temperature value
  *  @return none
  */
-void getTemperatureData(volatile float* p_temperature_val);
-
 void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCurve, ReflowTemplate *p_ReflowParameters);
 /** @brief Show current Temperature and Time remaining values on LCD\n
  *  This Function controls shows current Temperature and Time remaining values on LCD and also error as difference between set and measured temperature.

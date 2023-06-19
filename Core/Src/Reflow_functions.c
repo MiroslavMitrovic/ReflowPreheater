@@ -343,7 +343,10 @@ void msTempControlHandler(msTempControlParams* CtrlParams, uint16_t* p_ReflowCur
 		  PID.state[2] = 999;
 
 	  }
-	  else{}
+	  else
+	  {
+		  PID.Ki = p_ReflowParameters->KI;
+	  }
 
 
 

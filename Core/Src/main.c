@@ -25,6 +25,8 @@
 
 #include "eeprom.h"
 #include "variables.h"
+#include "CRC32.h"
+#include "stm32f4xx_hal_crc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,7 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define BUFFER_SIZE 0x1FFFC
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -43,6 +45,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CRC_HandleTypeDef hcrc;
+
 I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi1;
@@ -65,8 +69,10 @@ static void MX_SPI1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM6_Init(void);
+static void MX_CRC_Init(void);
 /* USER CODE BEGIN PFP */
-
+uint32_t Crc32(uint32_t Crc, uint32_t Data);
+uint32_t crc32_check (uint8_t* buf, uint16_t len);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -81,7 +87,13 @@ uint16_t *p_ReflowCurve;
 uint16_t *p_PhaseIndex;
 msTempControlParams CtrlParams;
 FLAGS StateFlag;
+uint32_t u32_ChecksumValue = 0;
+uint32_t BufferCount;
+const uint32_t *myDataBuffer;
 
+//uint32_t DataBuffer[2] = {0x12345678, 0x23456789};
+uint32_t DataBuffer[1] = {0x11111111};
+volatile uint32_t myCRCValue1 = 0xFFFFFFFF;
 /* USER CODE END 0 */
 
 /**
@@ -118,6 +130,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM6_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
   //TODO add Ki and KD as parameters for entering, and add them in FEE.
   ReflowParameters.KD = 0.3;
@@ -141,9 +154,28 @@ int main(void)
   p_ReflowParameters = &ReflowParameters;
   p_ReflowCurve = u_ReflowCurve_main;
   p_PhaseIndex = PhaseIndex_main;
+  BufferCount = BUFFER_SIZE /4;
+  uint32_t BufferCount2 = 1;
+  myDataBuffer =(uint32_t*) 0x08040000;
+  uint32_t *p_DataBuffer = DataBuffer;
+  uint8_t testByte = 0;
+  uint32_t R_ChecksumValue = 0;
+  const char *p_StartAddress = 0x08040000;
+  u32_ChecksumValue = HAL_CRC_Accumulate(&hcrc, myDataBuffer, BufferCount);
 
+  u32_ChecksumValue = crc32_byte(p_StartAddress, BUFFER_SIZE);
 
+  R_ChecksumValue = BE_to_SE_convert(R_ChecksumValue);
 
+ if(0 != memcmp(&R_ChecksumValue, (void*)CRC32_CALCULATION_END_ADDRESS, 4))
+ {
+	 //Checksum faulty, remain in while loop
+	 while(1);
+ }
+ else
+ {
+	 //do nothing
+ }
  // address=find_I2C_deviceAddress();
  // HAL_Delay(2000);
   ResetFlags();
@@ -195,7 +227,7 @@ int main(void)
 	  if (10 <= CtrlParams.counter_10ms)
 	  {
 		  CtrlParams.counter_10ms = 0;
-		 // msTempControlHandler(&CtrlParams, p_ReflowCurve, p_ReflowParameters);
+
 
 	  }
 	  if(250 <= CtrlParams.counter_250ms)
@@ -241,6 +273,7 @@ void SystemClock_Config(void)
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -256,6 +289,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -269,6 +303,33 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief CRC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CRC_Init(void)
+{
+
+  /* USER CODE BEGIN CRC_Init 0 */
+
+  /* USER CODE END CRC_Init 0 */
+
+  /* USER CODE BEGIN CRC_Init 1 */
+
+  /* USER CODE END CRC_Init 1 */
+	hcrc.Instance = CRC;
+
+  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CRC_Init 2 */
+
+  /* USER CODE END CRC_Init 2 */
+
 }
 
 /**
@@ -618,6 +679,56 @@ int find_I2C_deviceAddress(void)
 	}
 	return -1;//error
 }
+
+uint32_t Crc32(uint32_t Crc, uint32_t Data)
+{
+  uint8_t index;
+#ifdef VERBOSE_PRINTF_CRC32
+  printf("\n\rPREPARATION\tINIT_CRC=0x%08X\tDATA=0x%08X\t", Crc, Data);
+#endif
+  Crc = Crc ^ Data;
+#ifdef VERBOSE_PRINTF_CRC32
+  printf("NEW CRC=0x%8X\n\r", Crc);
+#endif
+
+  for(index=0; index < 32; index++)
+  {
+#ifdef VERBOSE_PRINTF_CRC32
+    printf("Index=%2d\tINIT_CRC=0x%08X\tPOLY=0x04C11DB7\t",index,Crc);
+#endif
+    if (Crc & 0x80000000)
+      Crc = (Crc << 1) ^ 0x04C11DB7; // Polynomial used in STM32
+    else
+      Crc = (Crc << 1);
+#ifdef VERBOSE_PRINTF_CRC32
+    printf("NEW CRC=0x%08X\n\r",Crc);
+#endif
+  }
+  return(Crc);
+}
+
+uint8_t CRCenabledFlag = 0;
+/*****************************************************************************
+*  Calculate CRC32 in STM32 Hardware (Polyminal of STM32F1xx is fixed to 0x04C11DB7, CRC-32/BZIP2)
+*  DM00068118.pdf for more Infos
+******************************************************************************/
+uint32_t crc32_check (uint8_t* buf, uint16_t len) {
+
+	uint32_t* pBuffer = (uint32_t*)buf;
+	uint32_t BufferLength = (len/4); //(Length of buf uint8 to Length of buf uint32 is 1 by 4)
+	uint32_t index = 0;
+
+//	if(!CRCenabledFlag) {
+//		RCC_AHBPeriphClockCmd(RCC_AHBPeriph_CRC, ENABLE);
+//	}
+//	CRC_ResetDR();
+
+	for(index = 0; index < BufferLength; index++) {
+	   CRC->DR = __RBIT(pBuffer[index]);
+	}
+	return __RBIT(CRC->DR) ^ 0xFFFFFFFF;
+}
+
 /* USER CODE END 4 */
 
 /**
