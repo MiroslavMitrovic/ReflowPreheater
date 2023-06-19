@@ -1,0 +1,14 @@
+*.o
+*.d
+*.su
+*.cproject
+*.project.prefs
+*.elf
+*.map
+*.list
+*.srec
+*.cproject
+.settings/
+#exclusion of build folders
+build/
+debug/
